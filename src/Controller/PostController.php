@@ -33,7 +33,7 @@ class PostController extends AbstractController
     public function viewPost(?Post $post): JsonResponse
     {
         if (!$post) {
-            return new JsonResponse([], 404);
+            return new JsonResponse(['message' => 'Post not found'], 404);
         }
 
         return new JsonResponse($this->serializer->serialize($post, 'json', ['groups' => 'post:read']), 200, [], true);
@@ -50,7 +50,7 @@ class PostController extends AbstractController
 
         $post = new Post();
         $post->setTitle($parameters['title']);
-        $post->setContent($parameters['name']);
+        $post->setContent($parameters['content']);
 
         $this->em->persist($post);
         $this->em->flush();
@@ -63,7 +63,7 @@ class PostController extends AbstractController
     public function editPost(Request $request, ?Post $post): JsonResponse
     {
         if (!$post) {
-            return new JsonResponse([], 404);
+            return new JsonResponse(['message' => 'Post not found'], 404);
         }
         $parameters = $request->request->all();
 
@@ -84,12 +84,12 @@ class PostController extends AbstractController
     public function deletePost(?Post $post): JsonResponse
     {
         if (!$post) {
-            return new JsonResponse([], 404);
+            return new JsonResponse(['message' => 'Post not found'], 404);
         }
 
         $this->em->remove($post);
         $this->em->flush();
 
-        return new JsonResponse($this->serializer->serialize($post, 'json', ['groups' => 'post:read']), 200, [], true);
+        return new JsonResponse(['message' => 'Post deleted'], 200);
     }
 }
