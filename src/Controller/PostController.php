@@ -29,7 +29,9 @@ class PostController extends AbstractController
         if (!$user) {
             return new JsonResponse(['message' => 'Unauthorized'], 401);
         }
-        $posts = $this->em->getRepository(Post::class)->findAll();
+        $posts = $this->em->getRepository(Post::class)->findBy(
+            ["user" => $user]
+        );
 
         return new JsonResponse($this->serializer->serialize($posts, 'json', ['groups' => 'post:read']), 200, [], true);
     }
@@ -43,6 +45,9 @@ class PostController extends AbstractController
         }
         if (!$post) {
             return new JsonResponse(['message' => 'Post not found'], 404);
+        }
+        if ($post->getUser() != $user) {
+            return new JsonResponse(['message' => 'Unauthorized'], 401);
         }
 
         return new JsonResponse($this->serializer->serialize($post, 'json', ['groups' => 'post:read']), 200, [], true);
@@ -65,6 +70,7 @@ class PostController extends AbstractController
         $post = new Post();
         $post->setTitle($parameters['title']);
         $post->setContent($parameters['content']);
+        $post->setUser($user);
 
         $this->em->persist($post);
         $this->em->flush();
@@ -83,6 +89,9 @@ class PostController extends AbstractController
         if (!$post) {
             return new JsonResponse(['message' => 'Post not found'], 404);
         }
+        if ($post->getUser() != $user) {
+            return new JsonResponse(['message' => 'Unauthorized'], 401);
+        }
         $parameters = $request->request->all();
 
         if (empty($parameters['title']) || empty($parameters['content'])) {
@@ -91,6 +100,7 @@ class PostController extends AbstractController
 
         $post->setTitle($parameters['title']);
         $post->setContent($parameters['content']);
+        $post->setUser($user);
 
         $this->em->persist($post);
         $this->em->flush();
@@ -108,6 +118,10 @@ class PostController extends AbstractController
 
         if (!$post) {
             return new JsonResponse(['message' => 'Post not found'], 404);
+        }
+
+        if ($post->getUser() != $user) {
+            return new JsonResponse(['message' => 'Unauthorized'], 401);
         }
 
         $this->em->remove($post);

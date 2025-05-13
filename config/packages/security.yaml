@@ -30,5 +30,5 @@ security:
             jwt: ~
 
     access_control:
-        - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY } # public access
+        - { path: /login, roles: IS_AUTHENTICATED_ANONYMOUSLY } # public access
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY } # access with token -- protected routes

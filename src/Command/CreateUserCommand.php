@@ -42,11 +42,15 @@ class CreateUserCommand extends Command
             $user = new User();
             $user->setEmail("user$i@example.com");
 
-            $hashedPassword = $this->passwordHasher->hashPassword($user, 'password');
-            $user->setPassword($hashedPassword);
+            $plainPassword = $faker->password(8, 12); // Plain password for testing
+
+            //$hashedPassword = $this->passwordHasher->hashPassword($user, 'password');
+            $user->setPassword($plainPassword);
 
             $this->em->persist($user);
             $users[] = $user;
+
+            $output->writeln("<info>User $i: Email: user$i@example.com, Password: $plainPassword</info>");
         }
 
         // Create posts
@@ -57,7 +61,7 @@ class CreateUserCommand extends Command
 
             // Assign to a random user
             $randomUser = $users[array_rand($users)];
-            $post->setUser($randomUser); // This assumes you have setUser() method in Post entity
+            $post->setUser($randomUser);
 
             $this->em->persist($post);
         }

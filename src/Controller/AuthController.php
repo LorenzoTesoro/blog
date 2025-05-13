@@ -1,48 +1,49 @@
 <?php
 
-// src/Controller/PostController.php
-
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpFoundation\Request;
 use App\Entity\User;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
-
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthController extends AbstractController
 {
-    private $em;
-    private $jwtManager;
+    private EntityManagerInterface $em;
+    private JWTTokenManagerInterface $jwtManager;
+    private UserPasswordHasherInterface $passwordHasher;
 
     public function __construct(
         EntityManagerInterface $em,
-        JWTTokenManagerInterface $jwtManager
+        JWTTokenManagerInterface $jwtManager,
+        UserPasswordHasherInterface $passwordHasher
     ) {
         $this->em = $em;
         $this->jwtManager = $jwtManager;
+        $this->passwordHasher = $passwordHasher;
     }
 
-    #[Route('/api/login', name: 'login', methods: ['POST'])]
+    #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        $credentials = json_decode($request->getContent(), true);
+        $parameters = $request->request->all();
 
-        if (empty($credentials['username']) || empty($credentials['password'])) {
-            return new JsonResponse(['message' => 'Missing username or password'], 400);
+        if (empty($parameters['email']) || empty($parameters['password'])) {
+            return new JsonResponse(['message' => 'Missing email or password'], 400);
         }
 
-        // Find user by username
-        $user = $this->em->getRepository(User::class)->findOneBy(['username' => $credentials['username']]);
-
-        if (!$user || !password_verify($credentials['password'], $user->getPassword())) {
+        /** @var User|null $user */
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $parameters['email']]);
+        /* dump($user);
+        die(); */
+        if (!$user) {
             return new JsonResponse(['message' => 'Invalid credentials'], 401);
         }
 
-        // Generate the JWT token for the authenticated user
         $token = $this->jwtManager->create($user);
 
         return new JsonResponse(['token' => $token], 200);
